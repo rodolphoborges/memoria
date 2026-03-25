@@ -28,7 +28,7 @@ load_dotenv()
 # ─────────────────────────────────────────────
 PINECONE_API_KEY  = os.getenv("PINECONE_API_KEY")
 PINECONE_INDEX    = os.getenv("PINECONE_INDEX_NAME", "memoria")
-EMBEDDING_MODEL   = "all-MiniLM-L6-v2"
+EMBEDDING_MODEL   = "paraphrase-multilingual-MiniLM-L12-v2"
 TOP_K             = 5
 
 # Mapeamento: palavra-chave na query → namespace
@@ -89,7 +89,7 @@ def detect_namespace(query: str) -> str:
 
 
 def search_pinecone(query: str, namespace: str) -> list[dict]:
-    vector  = model.encode(query).tolist()
+    vector  = model.encode(query, normalize_embeddings=True).tolist()
     result  = index.query(
         vector=vector,
         top_k=TOP_K,

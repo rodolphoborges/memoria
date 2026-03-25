@@ -3,8 +3,8 @@
 Sistema de gestão de conhecimento técnico avançado com isolamento total entre contextos **[PROFISSIONAL]** (ERP TOTVS, SQL) e **[PESSOAL]** (Home Lab, Mods).
 
 ## 🏗️ Arquitetura
-- **Ingestão**: `Crawl4AI` para extração de dados de alta fidelidade.
-- **Vetorização**: `sentence-transformers` (Local/Free) para embeddings semânticos.
+- **Ingestão**: Leitura direta de arquivos locais (`.md`, `.py`) otimizada para Markdown.
+- **Vetorização**: `sentence-transformers` (Local/Free) utilizando o modelo `paraphrase-multilingual-MiniLM-L12-v2`.
 - **Armazenamento**: `Pinecone` utilizando **Namespaces** para separação de contextos.
 - **Segurança**: Governança via `.env`, hooks de pré-commit e histórico Git auditado.
 

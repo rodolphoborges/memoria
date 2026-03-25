@@ -20,7 +20,7 @@ load_dotenv()
 
 PINECONE_API_KEY   = os.getenv("PINECONE_API_KEY")
 PINECONE_INDEX     = os.getenv("PINECONE_INDEX_NAME", "memoria")
-EMBEDDING_MODEL    = "all-MiniLM-L6-v2"   # mesmo modelo usado no vectorize.py
+EMBEDDING_MODEL    = "paraphrase-multilingual-MiniLM-L12-v2"
 TOP_K              = 3                      # quantos resultados retornar por busca
 
 # Thresholds para o modelo all-MiniLM-L6-v2 com chunks de markdown.
@@ -76,7 +76,7 @@ def init_clients():
 # Busca semântica
 # ─────────────────────────────────────────────
 def search(model, index, query: str, namespace: str, top_k: int = TOP_K):
-    vector = model.encode(query).tolist()
+    vector = model.encode(query, normalize_embeddings=True).tolist()
     result = index.query(
         vector=vector,
         top_k=top_k,
