@@ -1,0 +1,13 @@
+{
+    "last_updated": "2026-03-25T05:28:17Z",
+    "total_vectors": 1164,
+    "dimension": 384,
+    "contexts": {
+        "pro": {
+            "vectors": 0
+        },
+        "personal": {
+            "vectors": 0
+        }
+    }
+}
