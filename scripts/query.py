@@ -21,12 +21,12 @@ index = pc.Index(PINECONE_INDEX_NAME)
 print(f"Loading local model: {MODEL_NAME}...")
 model = SentenceTransformer(MODEL_NAME)
 
-def query_context(query_text: str, namespace: str, top_k: int = 3):
-    """Query Pinecone for the most relevant context."""
+def query_context(query_text: str, namespace: str, top_k: int = 5):
+    """Query Pinecone with optimized parameters."""
     print(f"\nSearching in [{namespace}] for: '{query_text}'")
     
-    # Generate embedding for the query
-    query_embedding = model.encode(query_text).tolist()
+    # Generate NORMALIZED embedding for the query
+    query_embedding = model.encode(query_text, normalize_embeddings=True).tolist()
     
     # Query Pinecone
     results = index.query(
@@ -40,18 +40,26 @@ def query_context(query_text: str, namespace: str, top_k: int = 3):
         print("No matches found.")
         return
 
-    print(f"\nTop {len(results.matches)} matches found:")
+    print(f"\nTop {len(results.matches)} semantic matches found (Cosine Similarity):")
     for i, match in enumerate(results.matches):
-        print(f"\n--- Result {i+1} (Score: {match.score:.4f}) ---")
-        print(f"Source: {match.metadata['source']}")
-        print(f"Type: {match.metadata['type']}")
-        # We don't store the full text in metadata to save space in this basic version,
-        # but in a real RAG you might store snippets or IDs to fetch from a DB.
-        # For now, we show the metadata as proof of retrieval.
-        print(f"Filename: {match.metadata['filename']}")
+        try:
+            print(f"\n--- Result {i+1} (Confidence: {match.score:.4f}) ---")
+            print(f"Source: {match.metadata.get('source', 'Unknown')}")
+            print(f"Type: {match.metadata.get('type', 'Unknown')}")
+            
+            # Display preview if available, handling potential encoding issues
+            if 'text' in match.metadata:
+                snippet = match.metadata['text'].replace('\n', ' ')
+                # Ensure we can print to terminal by stripping non-encodable chars if needed
+                clean_snippet = snippet[:150].encode('ascii', errors='replace').decode('ascii')
+                print(f"Preview: {clean_snippet}...")
+            
+            print(f"Location: {match.metadata.get('filepath', 'Unknown')}")
+        except Exception as e:
+            print(f"Error displaying result {i+1}: {e}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Query the Knowledge Base.")
+    parser = argparse.ArgumentParser(description="Query the Knowledge Base (Optimized).")
     parser.add_argument("query", type=str, help="The question or topic to search for")
     parser.add_argument("--context", type=str, choices=["pro", "personal"], default="personal", 
                         help="Context to search in (pro -> work-context, personal -> home-context)")

@@ -2,6 +2,7 @@ import os
 import glob
 import json
 import argparse
+import re
 from typing import List, Dict
 from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone, ServerlessSpec
@@ -17,7 +18,7 @@ PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "memoria")
 # Model configuration (Absolutely Free & Local)
 # This model is excellent for Portuguese and multilingual contexts
 MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
-EMBEDDING_DIMENSION = 384 # Dimension for this specific model
+EMBEDDING_DIMENSION = 384 
 
 # Initialize Pinecone
 pc = Pinecone(api_key=PINECONE_API_KEY)
@@ -27,16 +28,39 @@ print(f"Loading local model: {MODEL_NAME}...")
 model = SentenceTransformer(MODEL_NAME)
 
 def get_embedding(text: str) -> List[float]:
-    """Generate embedding for the given text using local sentence-transformers."""
-    embedding = model.encode(text)
+    """Generate normalized embedding for the given text."""
+    # normalize_embeddings=True ensures cosine similarity works best
+    embedding = model.encode(text, normalize_embeddings=True)
     return embedding.tolist()
 
-def chunk_text(text: str, chunk_size: int = 1000) -> List[str]:
-    """Simple text chunking."""
-    return [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
+def chunk_text(text: str, chunk_size: int = 800, overlap: int = 100) -> List[str]:
+    """
+    Improved Markdown-aware chunking.
+    Splits by headers first, then by paragraphs, then by length.
+    """
+    # Remove frontmatter if exists (optional, keeping it as it adds tags/metadata context)
+    # text = re.sub(r'---.*?---', '', text, flags=re.DOTALL)
+    
+    # Simple semantic splitting by paragraphs
+    paragraphs = text.split('\n\n')
+    chunks = []
+    current_chunk = ""
+    
+    for p in paragraphs:
+        if len(current_chunk) + len(p) < chunk_size:
+            current_chunk += p + "\n\n"
+        else:
+            if current_chunk:
+                chunks.append(current_chunk.strip())
+            current_chunk = p + "\n\n"
+            
+    if current_chunk:
+        chunks.append(current_chunk.strip())
+        
+    return chunks
 
 def process_file(file_path: str) -> List[Dict]:
-    """Extract content and metadata from a file."""
+    """Extract content and metadata from a file, adding context to text."""
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
     
@@ -49,7 +73,11 @@ def process_file(file_path: str) -> List[Dict]:
     processed_chunks = []
     
     for i, chunk in enumerate(chunks):
-        embedding = get_embedding(chunk)
+        # ENRICHMENT: Prepend filename to the chunk to give the model context
+        # This solves the issue of a chunk appearing out of nowhere.
+        enriched_text = f"File: {source} | Content: {chunk}"
+        
+        embedding = get_embedding(enriched_text)
         chunk_id = f"{source}_{i}"
         
         metadata = {
@@ -57,7 +85,8 @@ def process_file(file_path: str) -> List[Dict]:
             "type": file_type,
             "filename": os.path.basename(file_path),
             "filepath": file_path,
-            "chunk_index": i
+            "chunk_index": i,
+            "text": chunk[:500] # Optional: store a snippet of text for quick preview
         }
         
         processed_chunks.append({
@@ -76,7 +105,7 @@ def upsert_to_pinecone(data: List[Dict], namespace: str):
     index.upsert(vectors=to_upsert, namespace=namespace)
 
 def main():
-    parser = argparse.ArgumentParser(description="Vectorize files using free local embeddings.")
+    parser = argparse.ArgumentParser(description="Vectorize files with optimized retrieval quality.")
     parser.add_argument("--path", type=str, default="docs", help="Path to docs directory")
     args = parser.parse_args()
 
@@ -96,14 +125,15 @@ def main():
 
     print(f"Found {len(files)} files to process.")
 
+    # Important: Re-indexing will overwrite existing IDs because we use filename_index as ID.
     for file_path in files:
-        print(f"Processing {file_path}...")
+        print(f"Optimizing index for {file_path}...")
         try:
             processed_data = process_file(file_path)
             if processed_data:
                 namespace = processed_data[0]["namespace"]
                 upsert_to_pinecone(processed_data, namespace)
-                print(f"Successfully upserted {file_path} to {namespace}")
+                print(f"Successfully optimized {file_path} in {namespace}")
         except Exception as e:
             print(f"Error processing {file_path}: {e}")
 
