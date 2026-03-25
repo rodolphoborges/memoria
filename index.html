@@ -65,6 +65,8 @@
         .card ul { list-style: none; margin-top: 12px; font-size: 0.85rem; color: #cbd5e1; }
         .card ul li { margin-bottom: 4px; display: flex; align-items: center; }
         .card ul li::before { content: "•"; color: var(--accent-secondary); margin-right: 8px; }
+        .card-stats { margin-top: 20px; font-size: 0.75rem; color: var(--text-dim); font-weight: 600; }
+        .card-stats span { color: white; margin-left: 5px; }
 
         /* Control Panel */
         .control-panel {
@@ -172,6 +174,7 @@
                     <li>SQL Server & Oracle SQL</li>
                     <li>Sharepoint & Fluig</li>
                 </ul>
+                <div class="card-stats">Vetores: <span id="stat-pro">--</span></div>
             </div>
             <div class="card">
                 <h3>Pessoal</h3>
@@ -181,6 +184,7 @@
                     <li>Docker & Automação</li>
                     <li>Mods & Desenvolvimento Lua</li>
                 </ul>
+                <div class="card-stats">Vetores: <span id="stat-personal">--</span></div>
             </div>
         </div>
 
@@ -233,6 +237,24 @@
         const statusDiv = document.getElementById('status');
         const ghTokenInput = document.getElementById('gh-token');
         const contextBtns = document.querySelectorAll('.context-btn');
+        const statPro = document.getElementById('stat-pro');
+        const statPersonal = document.getElementById('stat-personal');
+
+        // Fetch stats from static JSON
+        async function fetchStats() {
+            try {
+                const response = await fetch('stats.json?t=' + Date.now());
+                if (response.ok) {
+                    const data = await response.json();
+                    if (statPro) statPro.innerText = data.contexts.pro.vectors.toLocaleString();
+                    if (statPersonal) statPersonal.innerText = data.contexts.personal.vectors.toLocaleString();
+                }
+            } catch (e) {
+                console.log("Stats not available yet.");
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', fetchStats);
         let selectedContext = 'pro';
 
         // GitHub Logic
