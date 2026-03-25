@@ -18,6 +18,7 @@ Sistema de gestão de conhecimento técnico avançado com isolamento total entre
 Clone o repositório e instale as dependências:
 ```bash
 pip install -r requirements.txt
+python -m playwright install chromium
 ```
 
 ### 3. Configuração do Ambiente
@@ -28,30 +29,32 @@ Copie o arquivo de exemplo e preencha suas chaves:
 cp .env.example .env
 ```
 
-**GitHub (Para Dashboard e Automação):**
-Para que o Dashboard e as Actions funcionem, você deve adicionar os seguintes **Secrets** no seu repositório (Settings > Secrets and variables > Actions):
+**GitHub (Dashboard e Automação):**
+Para que o Dashboard e as Actions funcionem, adicione os seguintes **Secrets** no repositório (Settings > Secrets > Actions):
 - `PINECONE_API_KEY`: Sua chave do Pinecone.
 - `PINECONE_INDEX_NAME`: O nome do seu índice (ex: `memoria`).
 
 **Ativando o Dashboard (GitHub Pages):**
 1. Vá em **Settings > Pages**.
-2. Em "Build and deployment", escolha a branch `main` (ou a sua branch principal).
-3. Salve e aguarde alguns minutos. O painel estará disponível em `https://seu-usuario.github.io/memoria`.
+2. Escolha a branch `main`.
+3. O painel ficará em `https://seu-usuario.github.io/memoria`.
 
 ### 4. Uso
 
 **Ingestão de Arquivos Locais:**
-Adicione seus documentos em `docs/professional/` ou `docs/personal/` e execute:
 ```bash
 python scripts/vectorize.py --path docs
 ```
 
 **Ingestão Web (Crawl4AI):**
-Para capturar conteúdo diretamente de uma URL:
 ```bash
-python scripts/crawl_ingest.py "https://url-do-site.com" --context pro
+python scripts/crawl_ingest.py "https://url.com" --context pro --depth 1 --limit 10
 ```
-*(Use `--context personal` para o contexto pessoal)*
+- `--depth`: Nível de navegação (1 = apenas a página, 2+ = segue links internos).
+- `--limit`: Máximo de páginas a serem capturadas.
+
+**💡 Recurso: Limpeza Automática**
+O sistema possui **Upsert Inteligente**. Ao re-ingerir a mesma URL ou arquivo, ele apaga automaticamente os vetores antigos daquela fonte antes de inserir os novos, garantindo que não haja dados duplicados ou obsoletos.
 
 ## 🛡️ Governança
 Este projeto utiliza a **Golden Rule**: Jamais misturar contextos de busca para evitar alucinações profissionais com dados pessoais.
