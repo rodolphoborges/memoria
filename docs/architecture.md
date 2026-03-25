@@ -1,42 +1,29 @@
-# Architecture: Knowledge Architect RAG
+# Architecture: Dual-Context RAG
 
-## 🧩 RAG Flow
-The system follows a modern RAG (Retrieval-Augmented Generation) pipeline:
+## 🧩 Architectural Overview
+This project implements a Dual-Context RAG (Retrieval-Augmented Generation) system designed to manage two distinct knowledge bases with zero cross-contamination.
 
-1. **Crawl & Collect**: Data is collected from various sources (currently manual markdown/code files, extensible to `Crawl4AI`).
-2. **Processing**: Files are chunked and processed by `scripts/vectorize.py`.
-3. **Embedding**: Text chunks are converted into vectors using `sentence-transformers` (local/free).
-4. **Vector Store**: Embeddings are upserted into **Pinecone** with specific metadata and namespaces.
+### 1. Dual-Context Isolation
+The core principle of this architecture is the use of **Namespaces** to prevent "professional hallucinations" with personal data.
 
-```mermaid
-graph LR
-    A[Sources: .md, .py] --> B[scripts/vectorize.py]
-    B --> C[Local Embedding Model]
-    C --> D[Pinecone Vector DB]
-    D -- Query --> E[User Interface/LLM]
-```
+- **Namespace: `work-context`**
+  - Profile: SysAdmin / Systems Analyst.
+  - Domains: ERP TOTVS (Datasul, Fluig), ITSM (TOPDesk), SQL Server Administration, Office 365/SharePoint.
+- **Namespace: `home-context`**
+  - Profile: Home Lab / Developer.
+  - Domains: Protocolo V, Mods Project Zomboid, Home Automation, Python/Lua experimentation.
 
-## 🏷️ Metadata Schema
-To ensure strict context separation, we use **Namespaces**:
+> **💡 The Golden Rule**: Jamais misturar contextos de busca para evitar alucinações profissionais com dados pessoais.
 
-- `work-context`: Corporate environment (TOTVS, SQL, Governance).
-- `home-context`: Personal projects (Home Lab, JS, Lua, Python).
+## 🚀 Ingestion Flow
+The pipeline is designed for high-fidelity data extraction and semantic retrieval:
 
-**Metadata Fields:**
-- `source`: Filename.
-- `type`: `documentation` or `code-snippet`.
-- `filename`: Full basename.
-- `chunk_index`: Sequence in document for retrieval reconstruction.
+1. **Extraction (`Crawl4AI`)**: Crawling and scraping web-based or local documentation.
+2. **Chunking**: Dividing documents into manageable semantic units.
+3. **Embedding**: Converting text to vectors using local `sentence-transformers` (Free) or OpenAI.
+4. **Vector Store (`Pinecone`)**: Storing vectors into specific namespaces based on the source path.
 
-## 🛡️ Security Model
-- **Zero Hardcoding**: No API keys are stored in the codebase.
-- **Local Environment**: Uses `.env` via `python-dotenv` for local development.
-- **CI/CD Security**: GitHub Actions use **GitHub Secrets** for `PINECONE_API_KEY` and `PINECONE_INDEX_NAME`.
-- **Pre-commit Hooks**: Automated checks for secret detection before any commit.
-
-## 🔄 Disaster Recovery: Credential Rotation
-If credentials (Pinecone API Key) are compromised:
-1. **Revoke**: Generate a new key in the Pinecone Console and revoke the old one.
-2. **Update Secrets**: Update the `PINECONE_API_KEY` secret in GitHub Actions.
-3. **Local Update**: Update personal `.env` files (ensuring they are never committed).
-4. **Audit**: Review recent GitHub Action runs and Pinecone access logs.
+## 🛡️ Security Governance
+- **Git Purge**: Historical `.env` files have been purged from the repository.
+- **Local Env**: All sensitive keys must reside in a local-only `.env` file.
+- **Secret Detection**: Pre-commit hooks are configured to block commits containing sensitive strings.
