@@ -106,8 +106,22 @@ def prepare_chunks(content: str, source: str, file_type: str, namespace: str, fi
     return processed_chunks
 
 def upsert_to_pinecone(data: List[Dict], namespace: str):
-    """Upsert vectors to Pinecone."""
+    """Upsert vectors to Pinecone after cleaning up old data for the same source."""
+    if not data:
+        return
+
     index = get_pinecone_index()
+    source = data[0]["metadata"].get("source")
+    
+    # Pre-emptive cleanup to avoid "zombie" chunks from older versions
+    if source:
+        try:
+            print(f"🧹 Cleaning up existing vectors for: {source}...")
+            index.delete(filter={"source": {"$eq": source}}, namespace=namespace)
+        except Exception as e:
+            # Continue even if delete fails (e.g., if brand new source)
+            print(f"⚠️ Cleanup note: {e}")
+
     to_upsert = [(d["id"], d["values"], d["metadata"]) for d in data]
     index.upsert(vectors=to_upsert, namespace=namespace)
 
