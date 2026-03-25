@@ -21,12 +21,22 @@ pip install -r requirements.txt
 ```
 
 ### 3. Configuração do Ambiente
+
+**Local:**
 Copie o arquivo de exemplo e preencha suas chaves:
 ```bash
 cp .env.example .env
 ```
-> [!IMPORTANT]
-> Nunca versione o arquivo `.env`. Ele já está bloqueado no `.gitignore`.
+
+**GitHub (Para Dashboard e Automação):**
+Para que o Dashboard e as Actions funcionem, você deve adicionar os seguintes **Secrets** no seu repositório (Settings > Secrets and variables > Actions):
+- `PINECONE_API_KEY`: Sua chave do Pinecone.
+- `PINECONE_INDEX_NAME`: O nome do seu índice (ex: `memoria`).
+
+**Ativando o Dashboard (GitHub Pages):**
+1. Vá em **Settings > Pages**.
+2. Em "Build and deployment", escolha a branch `main` (ou a sua branch principal).
+3. Salve e aguarde alguns minutos. O painel estará disponível em `https://seu-usuario.github.io/memoria`.
 
 ### 4. Uso
 

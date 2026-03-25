@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memória: Knowledge Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #030303;
+            --accent-primary: #818cf8;
+            --accent-secondary: #c084fc;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --glass: rgba(255, 255, 255, 0.02);
+            --border: rgba(255, 255, 255, 0.06);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% -20%, rgba(129, 140, 248, 0.15) 0%, transparent 50%);
+        }
+
+        .main-wrapper {
+            width: 100%;
+            max-width: 800px;
+            padding: 40px 20px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        header { text-align: center; margin-bottom: 60px; }
+        h1 { font-size: 2.8rem; font-weight: 300; letter-spacing: -0.02em; margin-bottom: 12px; }
+        h1 span { font-weight: 600; background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .tagline { color: var(--text-dim); font-size: 1.1rem; }
+
+        /* Project Insight Cards */
+        .insights {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 60px;
+        }
+
+        .card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-4px); background: rgba(255,255,255,0.04); }
+        .card h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-primary); margin-bottom: 16px; }
+        .card p { font-size: 0.95rem; color: var(--text-dim); line-height: 1.6; }
+        .card ul { list-style: none; margin-top: 12px; font-size: 0.85rem; color: #cbd5e1; }
+        .card ul li { margin-bottom: 4px; display: flex; align-items: center; }
+        .card ul li::before { content: "•"; color: var(--accent-secondary); margin-right: 8px; }
+
+        /* Control Panel */
+        .control-panel {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            padding: 40px;
+            backdrop-filter: blur(40px);
+        }
+
+        .input-group { margin-bottom: 30px; }
+        label { display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; letter-spacing: 0.05em; }
+        
+        input, select {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        input:focus { outline: none; border-color: var(--accent-primary); background: rgba(0,0,0,0.5); }
+
+        .context-selector { display: flex; gap: 10px; margin-top: 5px; }
+        .context-btn {
+            flex: 1;
+            padding: 14px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-dim);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 0.9rem;
+        }
+        .context-btn.active { border-color: var(--accent-primary); color: white; background: rgba(129, 140, 248, 0.1); }
+
+        .btn-main {
+            width: 100%;
+            padding: 20px;
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .btn-main:hover { transform: scale(1.01); background: #f1f5f9; box-shadow: 0 0 30px rgba(129, 140, 248, 0.2); }
+        .btn-main:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+
+        /* Feedback Status */
+        #status { margin-top: 25px; font-size: 0.9rem; text-align: center; color: var(--text-dim); padding: 15px; border-radius: 12px; display: none; }
+        .success { color: #10b981; background: rgba(16, 185, 129, 0.05); }
+        .error { color: #f43f5e; background: rgba(244, 63, 94, 0.05); }
+
+        /* Secondary Actions/Links */
+        .footer-links { display: flex; justify-content: center; gap: 30px; margin-top: 40px; font-size: 0.8rem; color: var(--text-dim); }
+        .footer-links a { color: var(--text-dim); text-decoration: none; transition: 0.3s; }
+        .footer-links a:hover { color: var(--accent-primary); }
+
+        /* Small Stats Simulation */
+        .stats-strip {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 40px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+        }
+        .stat-item span { color: white; font-weight: 600; margin-left: 5px; }
+
+        @media (max-width: 600px) {
+            .insights { grid-template-columns: 1fr; }
+            h1 { font-size: 2.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-wrapper">
+        <header>
+            <h1>Memória <span>Hub</span></h1>
+            <p class="tagline">Minimalist RAG Control Interface</p>
+        </header>
+
+        <div class="stats-strip">
+            <div class="stat-item">MODO<span>Dual-Context</span></div>
+            <div class="stat-item">VETORIZAÇÃO<span>Sentence-BERT</span></div>
+            <div class="stat-item">STATUS<span>Pronto</span></div>
+        </div>
+
+        <div class="insights">
+            <div class="card">
+                <h3>Profissional</h3>
+                <p>Base de conhecimento corporativa focada em arquitetura e dados.</p>
+                <ul>
+                    <li>ERP TOTVS (Protheus, Datasul)</li>
+                    <li>SQL Server & Oracle SQL</li>
+                    <li>Sharepoint & Fluig</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Pessoal</h3>
+                <p>Gestão de projetos individuais, home lab e personalização.</p>
+                <ul>
+                    <li>Home Lab & Proxmox</li>
+                    <li>Docker & Automação</li>
+                    <li>Mods & Desenvolvimento Lua</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="input-group">
+                <label>GitHub Access Token</label>
+                <input type="password" id="gh-token" placeholder="ghp_..." autocomplete="off">
+            </div>
+
+            <div class="input-group">
+                <label>URL para Ingestão</label>
+                <input type="url" id="target-url" placeholder="Ex: https://docs.totvs.com.br/artigo">
+            </div>
+
+            <div class="input-group">
+                <label>Contexto de Destino</label>
+                <div class="context-selector">
+                    <button class="context-btn active" data-value="pro">Profissional</button>
+                    <button class="context-btn" data-value="personal">Pessoal</button>
+                </div>
+            </div>
+
+            <button class="btn-main" id="btn-submit">Sincronizar Conhecimento</button>
+            <div id="status"></div>
+        </div>
+
+        <div class="footer-links">
+            <a href="https://github.com/rodolphoborges/memoria/actions" target="_blank">Workflow Logs</a>
+            <a href="https://github.com/rodolphoborges/memoria" target="_blank">Visualizar Repositório</a>
+        </div>
+    </div>
+
+    <script>
+        const btnSubmit = document.getElementById('btn-submit');
+        const statusDiv = document.getElementById('status');
+        const ghTokenInput = document.getElementById('gh-token');
+        const contextBtns = document.querySelectorAll('.context-btn');
+        let selectedContext = 'pro';
+
+        // GitHub Logic
+        const owner = "rodolphoborges";
+        const repo = "memoria";
+        const workflowId = "web_ingest.yml";
+
+        // Load token from localStorage
+        ghTokenInput.value = localStorage.getItem('gh_pat_memoria') || '';
+
+        // Context toggle logic
+        contextBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                contextBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedContext = btn.getAttribute('data-value');
+            });
+        });
+
+        btnSubmit.addEventListener('click', async () => {
+            const url = document.getElementById('target-url').value;
+            const token = ghTokenInput.value;
+
+            if (!url || !token) {
+                showStatus('Preencha todos os campos obrigatórios.', 'error');
+                return;
+            }
+
+            localStorage.setItem('gh_pat_memoria', token);
+            setLoading(true);
+
+            try {
+                const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflowId}/dispatches`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ref: 'main',
+                        inputs: { url, context: selectedContext }
+                    })
+                });
+
+                if (response.status === 204) {
+                    showStatus('Sincronização iniciada com sucesso.', 'success');
+                } else {
+                    const data = await response.json();
+                    showStatus(`Falha: ${data.message || 'Erro desconhecido'}`, 'error');
+                }
+            } catch (err) {
+                showStatus('Erro de conexão com a API do GitHub.', 'error');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        function showStatus(msg, type) {
+            statusDiv.innerText = msg;
+            statusDiv.style.display = 'block';
+            statusDiv.className = type;
+        }
+
+        function setLoading(isLoading) {
+            btnSubmit.disabled = isLoading;
+            btnSubmit.innerText = isLoading ? 'Sincronizando...' : 'Sincronizar Conhecimento';
+        }
+    </script>
+</body>
+</html>
