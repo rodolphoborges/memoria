@@ -1,0 +1,6 @@
+pinecone-client
+python-dotenv
+sentence-transformers
+torch
+argparse
+typing
