@@ -15,6 +15,16 @@ on:
         options:
           - pro
           - personal
+      depth:
+        description: 'Crawl depth (1 = single page)'
+        required: true
+        default: '1'
+        type: string
+      limit:
+        description: 'Max total pages to ingest'
+        required: true
+        default: '10'
+        type: string
 
 jobs:
   ingest:
@@ -38,4 +48,4 @@ jobs:
         env:
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
-        run: python scripts/crawl_ingest.py "${{ github.event.inputs.url }}" --context ${{ github.event.inputs.context }}
+        run: python scripts/crawl_ingest.py "${{ github.event.inputs.url }}" --context ${{ github.event.inputs.context }} --depth ${{ github.event.inputs.depth }} --limit ${{ github.event.inputs.limit }}

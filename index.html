@@ -75,6 +75,8 @@
             backdrop-filter: blur(40px);
         }
 
+        .form-row { display: flex; gap: 20px; }
+
         .input-group { margin-bottom: 30px; }
         label { display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; letter-spacing: 0.05em; }
         
@@ -193,6 +195,21 @@
                 <input type="url" id="target-url" placeholder="Ex: https://docs.totvs.com.br/artigo">
             </div>
 
+<div class="form-row">
+                <div class="input-group" style="flex: 1;">
+                    <label>Profundidade</label>
+                    <select id="crawl-depth">
+                        <option value="1" selected>Apenas esta página (D1)</option>
+                        <option value="2">Seguir links internos (D2)</option>
+                        <option value="3">Navegação profunda (D3)</option>
+                    </select>
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label>Limite de Páginas</label>
+                    <input type="number" id="page-limit" value="10" min="1" max="100">
+                </div>
+            </div>
+
             <div class="input-group">
                 <label>Contexto de Destino</label>
                 <div class="context-selector">
@@ -238,6 +255,8 @@
         btnSubmit.addEventListener('click', async () => {
             const url = document.getElementById('target-url').value;
             const token = ghTokenInput.value;
+            const depth = document.getElementById('crawl-depth').value;
+            const limit = document.getElementById('page-limit').value;
 
             if (!url || !token) {
                 showStatus('Preencha todos os campos obrigatórios.', 'error');
@@ -257,7 +276,12 @@
                     },
                     body: JSON.stringify({
                         ref: 'main',
-                        inputs: { url, context: selectedContext }
+                        inputs: { 
+                            url, 
+                            context: selectedContext,
+                            depth: depth.toString(),
+                            limit: limit.toString()
+                        }
                     })
                 });
 
