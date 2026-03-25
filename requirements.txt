@@ -1,4 +1,4 @@
-pinecone-client
+pinecone
 python-dotenv
 sentence-transformers
 torch
