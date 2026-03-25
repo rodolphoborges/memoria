@@ -3,7 +3,7 @@
 Sistema de gestão de conhecimento técnico avançado com isolamento total entre contextos **[PROFISSIONAL]** (ERP TOTVS, SQL) e **[PESSOAL]** (Home Lab, Mods).
 
 ## 🏗️ Arquitetura
-- **Ingestão**: Leitura direta de arquivos locais (`.md`, `.py`) otimizada para Markdown.
+- **Ingestão**: Leitura local (`.md`, `.py`) e web scraping dinâmico via `Crawl4AI`.
 - **Vetorização**: `sentence-transformers` (Local/Free) utilizando o modelo `paraphrase-multilingual-MiniLM-L12-v2`.
 - **Armazenamento**: `Pinecone` utilizando **Namespaces** para separação de contextos.
 - **Segurança**: Governança via `.env`, hooks de pré-commit e histórico Git auditado.
@@ -29,10 +29,19 @@ cp .env.example .env
 > Nunca versione o arquivo `.env`. Ele já está bloqueado no `.gitignore`.
 
 ### 4. Uso
-Adicione seus documentos em `docs/professional/` ou `docs/personal/` e execute o script de ingestão:
+
+**Ingestão de Arquivos Locais:**
+Adicione seus documentos em `docs/professional/` ou `docs/personal/` e execute:
 ```bash
 python scripts/vectorize.py --path docs
 ```
+
+**Ingestão Web (Crawl4AI):**
+Para capturar conteúdo diretamente de uma URL:
+```bash
+python scripts/crawl_ingest.py "https://url-do-site.com" --context pro
+```
+*(Use `--context personal` para o contexto pessoal)*
 
 ## 🛡️ Governança
 Este projeto utiliza a **Golden Rule**: Jamais misturar contextos de busca para evitar alucinações profissionais com dados pessoais.

@@ -20,16 +20,26 @@ PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "memoria")
 MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
 EMBEDDING_DIMENSION = 384 
 
-# Initialize Pinecone
-pc = Pinecone(api_key=PINECONE_API_KEY)
+# Initialize components lazily or globally for reuse
+_model = None
+_pc = None
 
-# Initialize Local Model
-print(f"Loading local model: {MODEL_NAME}...")
-model = SentenceTransformer(MODEL_NAME)
+def get_pinecone_index():
+    global _pc
+    if _pc is None:
+        _pc = Pinecone(api_key=PINECONE_API_KEY)
+    return _pc.Index(PINECONE_INDEX_NAME)
+
+def get_model():
+    global _model
+    if _model is None:
+        print(f"Loading local model: {MODEL_NAME}...")
+        _model = SentenceTransformer(MODEL_NAME)
+    return _model
 
 def get_embedding(text: str) -> List[float]:
     """Generate normalized embedding for the given text."""
-    # normalize_embeddings=True ensures cosine similarity works best
+    model = get_model()
     embedding = model.encode(text, normalize_embeddings=True)
     return embedding.tolist()
 
@@ -38,10 +48,6 @@ def chunk_text(text: str, chunk_size: int = 800, overlap: int = 100) -> List[str
     Improved Markdown-aware chunking.
     Splits by headers first, then by paragraphs, then by length.
     """
-    # Remove frontmatter if exists (optional, keeping it as it adds tags/metadata context)
-    # text = re.sub(r'---.*?---', '', text, flags=re.DOTALL)
-    
-    # Simple semantic splitting by paragraphs
     paragraphs = text.split('\n\n')
     chunks = []
     current_chunk = ""
@@ -69,24 +75,25 @@ def process_file(file_path: str) -> List[Dict]:
     source = os.path.basename(file_path)
     file_type = "documentation" if file_path.endswith('.md') else "code-snippet"
     
+    return prepare_chunks(content, source, file_type, namespace, file_path)
+
+def prepare_chunks(content: str, source: str, file_type: str, namespace: str, file_path: str = "") -> List[Dict]:
+    """Generic function to chunk and vectorize content."""
     chunks = chunk_text(content)
     processed_chunks = []
     
     for i, chunk in enumerate(chunks):
-        # ENRICHMENT: Prepend filename to the chunk to give the model context
-        # This solves the issue of a chunk appearing out of nowhere.
-        enriched_text = f"File: {source} | Content: {chunk}"
-        
+        enriched_text = f"Source: {source} | Content: {chunk}"
         embedding = get_embedding(enriched_text)
         chunk_id = f"{source}_{i}"
         
         metadata = {
             "source": source,
             "type": file_type,
-            "filename": os.path.basename(file_path),
+            "filename": source,
             "filepath": file_path,
             "chunk_index": i,
-            "text": chunk[:500] # Optional: store a snippet of text for quick preview
+            "text": chunk[:1000] # Increased snippet size for better context in server
         }
         
         processed_chunks.append({
@@ -100,7 +107,7 @@ def process_file(file_path: str) -> List[Dict]:
 
 def upsert_to_pinecone(data: List[Dict], namespace: str):
     """Upsert vectors to Pinecone."""
-    index = pc.Index(PINECONE_INDEX_NAME)
+    index = get_pinecone_index()
     to_upsert = [(d["id"], d["values"], d["metadata"]) for d in data]
     index.upsert(vectors=to_upsert, namespace=namespace)
 
@@ -109,6 +116,8 @@ def main():
     parser.add_argument("--path", type=str, default="docs", help="Path to docs directory")
     args = parser.parse_args()
 
+    pc = Pinecone(api_key=PINECONE_API_KEY)
+    
     # Check index exists or create it
     if PINECONE_INDEX_NAME not in pc.list_indexes().names():
         print(f"Creating index {PINECONE_INDEX_NAME}...")
@@ -125,7 +134,6 @@ def main():
 
     print(f"Found {len(files)} files to process.")
 
-    # Important: Re-indexing will overwrite existing IDs because we use filename_index as ID.
     for file_path in files:
         print(f"Optimizing index for {file_path}...")
         try:
