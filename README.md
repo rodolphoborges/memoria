@@ -1,3 +1,5 @@
+﻿> **Aviso legal e LGPD:** mantenha contextos [PROFISSIONAL] e [PESSOAL] isolados (namespaces). Nunca ingira dados pessoais, segredos ou dumps de ERP sem base legal e sem anonimizar. Scraping via Crawl4AI: respeite robots.txt/ToS, apenas conteudo autorizado.
+
 # Memória: Knowledge Architect RAG (Dual-Context)
 
 Sistema de gestão de conhecimento técnico avançado com isolamento total entre contextos **[PROFISSIONAL]** (ERP TOTVS, SQL) e **[PESSOAL]** (Home Lab, Mods).
@@ -61,3 +63,4 @@ Este projeto utiliza a **Golden Rule**: Jamais misturar contextos de busca para 
 
 ---
 *Senior DevOps & Security Architect Baseline*
+
